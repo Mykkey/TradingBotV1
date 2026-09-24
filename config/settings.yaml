@@ -1,0 +1,89 @@
+# settings.yaml
+universe:
+  - SPY
+  - QQQ
+  - IWM
+  - DIA
+  - XLK
+  - XLF
+  - XLE
+  - XLV
+  - AAPL
+  - MSFT
+  - NVDA
+  - AMZN
+  - GOOGL
+  - META
+  - TSLA
+  - AVGO
+  - JPM
+  - V
+  - UNH
+  - XOM
+  - JNJ
+  - WMT
+  - PG
+  - MA
+  - HD
+  - COST
+  - AMD
+  - NFLX
+  - CRM
+  - BAC
+
+benchmark: SPY
+
+data:
+  cache_dir: data/cache
+  history_start: "2024-01-01"
+  live_feed: iex        # free plan: iex only for real-time
+  history_feed: sip     # free for data older than 15 minutes
+
+strategy:
+  decision_interval_min: 5
+  alphas: [momentum, mean_reversion]   # add "ml" after `python main.py train-alpha`
+  portfolio: equal_weight              # equal_weight | rl (after `python main.py train-rl`)
+  ml_model_path: models/lgbm_alpha.txt
+  rl_model_path: models/ppo_allocator.zip
+
+alphas:
+  momentum:
+    lookback_min: 30
+    threshold: 0.002        # 0.2% move over lookback to emit an insight
+    period_min: 15
+  mean_reversion:
+    vwap_z_entry: 2.0
+    lookback_min: 60
+    period_min: 15
+  ml:
+    entry: 0.55             # emit an insight when P(up) >= 0.55 or <= 0.45
+    period_min: 15
+
+ml:
+  horizon_min: 15
+  dead_band: 0.0005         # ignore labels with |forward return| below 5 bps
+  sample_every_min: 5
+  min_train_months: 6
+
+rl:
+  total_timesteps: 500000
+  train_until: null         # e.g. "2026-03-31"; later data is held out for evaluation
+  turnover_cost_bps: 3.0
+  risk_penalty: 0.1
+
+risk:
+  max_position_pct: 0.10      # of equity, per symbol
+  max_gross_exposure: 1.0     # 1.0 = no leverage
+  daily_loss_limit_pct: 0.02  # kill-switch: stop trading for the day
+  flatten_minutes_before_close: 5
+  min_trade_value: 200        # ignore rebalances smaller than this ($)
+  rebalance_band: 0.03        # skip resizing an open position by < 3% of equity
+
+costs:
+  commission_per_share: 0.0
+  slippage_bps: 2.0
+  half_spread_bps: 1.0
+
+logging:
+  log_dir: logs
+  equity_snapshot_min: 5
