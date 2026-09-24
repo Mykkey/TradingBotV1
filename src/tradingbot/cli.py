@@ -50,18 +50,28 @@ def cmd_backtest(settings, args):
     from tradingbot.execution.sim_exec import SimExecution
     from tradingbot.monitoring.report import build_report
     from tradingbot.portfolio import build_portfolio_model
-    from tradingbot.risk.limits import RiskLimits
+    from tradingbot.risk import build_risk_model
+    from tradingbot.risk.trend_gate import daily_closes_from_minutes
 
-    bars = load_bars(settings["universe"], ROOT / settings["data"]["cache_dir"],
-                     args.start, args.end)
+    cache = ROOT / settings["data"]["cache_dir"]
+    bars = load_bars(settings["universe"], cache, args.start, args.end)
 
     if not bars:
         raise SystemExit("No cached data. Run `python -m tradingbot download` first.")
 
+    # The trend gate needs daily closes from before the backtest window too.
+    # It only ever reads closes before the current week, so there's no lookahead.
+    trend = settings["risk"].get("trend_filter") or {}
+    daily_closes = None
+
+    if trend.get("enabled"):
+        full = load_bars([trend["symbol"]], cache)[trend["symbol"]]
+        daily_closes = daily_closes_from_minutes(full)
+
     algorithm = Algorithm(
         alphas=build_alphas(settings),
         portfolio_model=build_portfolio_model(settings),
-        risk_model=RiskLimits(**settings["risk"]),
+        risk_model=build_risk_model(settings, daily_closes),
         execution_model=SimExecution(settings["risk"]["min_trade_value"],
                                      settings["risk"].get("rebalance_band", 0.0)),
     )

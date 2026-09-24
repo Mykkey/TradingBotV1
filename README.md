@@ -36,6 +36,27 @@ Event-driven backtests (3 bps per side costs, $100k):
 This is close to index investing: it makes money when large caps rise and
 loses when they fall. Past results don't guarantee future ones.
 
+### Things tested that did not beat holding
+
+* **Monthly stock-picking model** (LightGBM on momentum, volatility,
+  moving-average and overnight/intraday features, walk-forward, predicting
+  21-day returns): rank IC −0.22 (t = −3.5), i.e. reliably *wrong*; its top-5
+  picks lost 34% in 2025 while holding all 22 made 13.5%.
+* **Fewer, larger trades** (2% band, $2,500 minimum): 24 trades instead of 56
+  in 2026, but return fell from 12.6% to 10.0%. At this trade count, costs
+  are only ~$50 over 9 months, so trimming trades further doesn't pay.
+* **Market-trend gate** (cash while SPY is below its 100-day average, decided
+  weekly; `risk.trend_filter`, off by default):
+
+  | | 2025 | 2025 max DD | 2026 | 2026 max DD |
+  | --- | --- | --- | --- | --- |
+  | Always hold | +12.4% | −21.8% | +12.6% | −8.8% |
+  | With gate | +1.7% | −12.7% | +8.7% | −5.0% |
+
+  It reliably cut drawdowns, but its return impact depended on a one-day
+  timing detail (deciding on Monday's vs Friday's close moved 2025 from
+  +11.8% to +1.7%), so it's left off.
+
 ## Setup
 
 ```powershell

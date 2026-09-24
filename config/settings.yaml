@@ -89,8 +89,15 @@ risk:
   daily_loss_limit_pct: null  # kill-switch (e.g. 0.02); off: selling after a bad day locks in losses
   flatten_at_close: false     # hold overnight; that's where the returns were
   flatten_minutes_before_close: 5
-  min_trade_value: 200        # ignore rebalances smaller than this ($)
+  min_trade_value: 1000       # no trades smaller than this ($)
   rebalance_band: 0.01        # only resize a position once it drifts > 1% of equity
+                              # (2%/$2,500 halved trades but cut 2026 return 12.6% -> 10.0%;
+                              #  costs at this trade count are only ~$50 over 9 months)
+  trend_filter:               # invested only while SPY > its N-day average (decided weekly)
+    enabled: false            # tested: halved drawdowns but 2025 return +1.7% vs +12.4%,
+                              # and the result hinged on a one-day timing detail
+    symbol: SPY
+    days: 100
 
 costs:
   commission_per_share: 0.0

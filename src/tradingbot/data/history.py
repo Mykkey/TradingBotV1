@@ -25,6 +25,20 @@ def regular_hours(bars):
     return bars[(minutes >= 9 * 60 + 30) & (minutes < 16 * 60)]
 
 
+def fetch_daily_closes(symbol, days=250, feed="sip"):
+    """Recent daily closes (index: ET dates) for the live trend gate."""
+    request = StockBarsRequest(
+        symbol_or_symbols=symbol,
+        timeframe=TimeFrame.Day,
+        start=datetime.now(timezone.utc) - timedelta(days=days * 7 // 5 + 10),
+        end=datetime.now(timezone.utc) - SIP_DELAY,
+        feed=DataFeed(feed),
+    )
+    df = client.get_stock_bars(request).df.droplevel("symbol")
+    return pd.Series(df["close"].to_numpy(),
+                     index=df.index.tz_convert("America/New_York").date)
+
+
 def _fetch(symbols, start, end, feed):
     request = StockBarsRequest(
         symbol_or_symbols=symbols,

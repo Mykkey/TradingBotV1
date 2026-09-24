@@ -16,10 +16,13 @@ class RiskLimits(RiskManagementModel):
         daily_loss_limit_pct=0.02,
         flatten_minutes_before_close=5,
         flatten_at_close=True,
+        trend_gate=None,
         **_,
     ):
         """daily_loss_limit_pct=None disables the kill-switch; flatten_at_close=False
-        lets positions be held overnight (multi-day strategies)."""
+        lets positions be held overnight (multi-day strategies); trend_gate (a
+        TrendGate) moves everything to cash while the market is below trend."""
+        self.trend_gate = trend_gate
         self.max_position = max_position_pct
         self.max_gross = max_gross_exposure
         self.daily_loss_limit = daily_loss_limit_pct
@@ -38,8 +41,9 @@ class RiskLimits(RiskManagementModel):
             self.halted_day = today
 
         closing = self.flatten_at_close and state["minutes_to_close"] <= self.flatten_minutes
+        below_trend = self.trend_gate is not None and not self.trend_gate.is_open(now)
 
-        if self.halted_day == today or closing:
+        if self.halted_day == today or closing or below_trend:
             return {symbol: 0.0 for symbol in set(targets) | set(state["positions"])}
 
         capped = {

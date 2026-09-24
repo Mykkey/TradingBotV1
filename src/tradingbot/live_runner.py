@@ -13,7 +13,8 @@ from tradingbot.data.live import BarBuffer
 from tradingbot.execution.alpaca_exec import AlpacaExecution, with_retries
 from tradingbot.monitoring.trade_logger import TradeLogger
 from tradingbot.portfolio import build_portfolio_model
-from tradingbot.risk.limits import RiskLimits
+from tradingbot.data.history import fetch_daily_closes
+from tradingbot.risk import build_risk_model
 
 
 log = logging.getLogger(__name__)
@@ -65,10 +66,16 @@ def run_live(settings):
     first_decision = settings["strategy"].get("first_decision_min", 0)
     snapshot_every = settings["logging"]["equity_snapshot_min"]
 
+    trend = settings["risk"].get("trend_filter") or {}
+    daily_closes = (
+        with_retries(fetch_daily_closes, trend["symbol"], feed=settings["data"]["history_feed"])
+        if trend.get("enabled") else None
+    )
+
     algorithm = Algorithm(
         alphas=build_alphas(settings),
         portfolio_model=build_portfolio_model(settings),
-        risk_model=RiskLimits(**settings["risk"]),
+        risk_model=build_risk_model(settings, daily_closes),
         execution_model=execution,
     )
 
