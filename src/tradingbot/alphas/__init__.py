@@ -1,4 +1,5 @@
 # alphas/__init__.py
+from tradingbot.alphas.hold import HoldAlpha
 from tradingbot.alphas.mean_reversion import VwapMeanReversionAlpha
 from tradingbot.alphas.momentum import MomentumAlpha
 
@@ -6,6 +7,7 @@ from tradingbot.alphas.momentum import MomentumAlpha
 def build_alphas(settings):
 
     registry = {
+        "hold": HoldAlpha,
         "momentum": MomentumAlpha,
         "mean_reversion": VwapMeanReversionAlpha,
     }

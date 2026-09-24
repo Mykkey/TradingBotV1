@@ -15,12 +15,16 @@ class RiskLimits(RiskManagementModel):
         max_gross_exposure=1.0,
         daily_loss_limit_pct=0.02,
         flatten_minutes_before_close=5,
+        flatten_at_close=True,
         **_,
     ):
+        """daily_loss_limit_pct=None disables the kill-switch; flatten_at_close=False
+        lets positions be held overnight (multi-day strategies)."""
         self.max_position = max_position_pct
         self.max_gross = max_gross_exposure
         self.daily_loss_limit = daily_loss_limit_pct
         self.flatten_minutes = flatten_minutes_before_close
+        self.flatten_at_close = flatten_at_close
         self.halted_day = None
 
     def manage_risk(self, now, targets, state):
@@ -28,11 +32,14 @@ class RiskLimits(RiskManagementModel):
 
         loss = 1 - state["equity"] / state["day_start_equity"]
 
-        if loss >= self.daily_loss_limit and self.halted_day != today:
+        if (self.daily_loss_limit is not None and loss >= self.daily_loss_limit
+                and self.halted_day != today):
             log.warning("Daily loss limit hit (%.2f%%): flattening for the day", loss * 100)
             self.halted_day = today
 
-        if self.halted_day == today or state["minutes_to_close"] <= self.flatten_minutes:
+        closing = self.flatten_at_close and state["minutes_to_close"] <= self.flatten_minutes
+
+        if self.halted_day == today or closing:
             return {symbol: 0.0 for symbol in set(targets) | set(state["positions"])}
 
         capped = {

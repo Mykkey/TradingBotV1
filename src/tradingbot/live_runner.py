@@ -60,7 +60,9 @@ def run_live(settings):
     universe = settings["universe"]
     benchmark = settings["benchmark"]
     interval = settings["strategy"]["decision_interval_min"]
-    flatten_minutes = settings["risk"]["flatten_minutes_before_close"]
+    flatten_at_close = settings["risk"].get("flatten_at_close", True)
+    flatten_minutes = settings["risk"]["flatten_minutes_before_close"] if flatten_at_close else 0
+    first_decision = settings["strategy"].get("first_decision_min", 0)
     snapshot_every = settings["logging"]["equity_snapshot_min"]
 
     algorithm = Algorithm(
@@ -100,12 +102,14 @@ def run_live(settings):
                 log_account_equity(logger, now, account, prices.get(benchmark))
 
             if minutes_to_close <= 2:
-                if account["positions"]:
+                if flatten_at_close and account["positions"]:
                     log.info("Closing all positions before the bell")
                     execution.close_all()
                 continue
 
-            if minutes_open % interval != 0 and minutes_to_close > flatten_minutes:
+            scheduled = minutes_open % interval == 0 and minutes_open >= first_decision
+
+            if not scheduled and minutes_to_close > flatten_minutes:
                 continue
 
             state = {

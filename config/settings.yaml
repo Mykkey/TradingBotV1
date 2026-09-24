@@ -39,14 +39,26 @@ data:
   live_feed: iex        # free plan: iex only for real-time
   history_feed: sip     # free for data older than 15 minutes
 
+# Strategy: hold an equal-weight basket of 22 large-cap stocks across days.
+# Research on 2024-2026 minute data showed these stocks earned almost all their
+# return overnight, and intraday signals lost money after costs. Chosen on
+# 2024-2025 data; 2026 (unseen) backtest: see README.
+#
+# To go back to the intraday strategy: alphas [momentum, mean_reversion],
+# decision_interval_min 5, first_decision_min 0, and in risk:
+# flatten_at_close true, daily_loss_limit_pct 0.02, rebalance_band 0.03.
 strategy:
-  decision_interval_min: 5
-  alphas: [momentum, mean_reversion]   # add "ml" after `python main.py train-alpha`
-  portfolio: equal_weight              # equal_weight | rl (after `python main.py train-rl`)
+  decision_interval_min: 30
+  first_decision_min: 30      # skip the first 30 min after the open (wide spreads)
+  alphas: [hold]              # hold | momentum | mean_reversion | ml
+  portfolio: equal_weight     # equal_weight | rl (after `tradingbot train-rl`)
   ml_model_path: models/lgbm_alpha.txt
   rl_model_path: models/ppo_allocator.zip
 
 alphas:
+  hold:
+    symbols: [AAPL, MSFT, NVDA, AMZN, GOOGL, META, TSLA, AVGO, JPM, V, UNH,
+              XOM, JNJ, WMT, PG, MA, HD, COST, AMD, NFLX, CRM, BAC]
   momentum:
     lookback_min: 30
     threshold: 0.002        # 0.2% move over lookback to emit an insight
@@ -74,10 +86,11 @@ rl:
 risk:
   max_position_pct: 0.10      # of equity, per symbol
   max_gross_exposure: 1.0     # 1.0 = no leverage
-  daily_loss_limit_pct: 0.02  # kill-switch: stop trading for the day
+  daily_loss_limit_pct: null  # kill-switch (e.g. 0.02); off: selling after a bad day locks in losses
+  flatten_at_close: false     # hold overnight; that's where the returns were
   flatten_minutes_before_close: 5
   min_trade_value: 200        # ignore rebalances smaller than this ($)
-  rebalance_band: 0.03        # skip resizing an open position by < 3% of equity
+  rebalance_band: 0.01        # only resize a position once it drifts > 1% of equity
 
 costs:
   commission_per_share: 0.0

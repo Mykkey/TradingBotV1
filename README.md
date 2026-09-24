@@ -13,6 +13,29 @@ AlphaModels -> Insights -> PortfolioConstruction -> RiskManagement -> Execution
 The backtester and the live bot run the **same** `Algorithm`; only the data
 feed and execution model differ.
 
+## Current strategy: equal-weight hold
+
+The bot holds an equal-weight basket of 22 large-cap stocks across days,
+trading only to deploy cash or trim a position that drifts more than 1% of
+equity (the `hold` alpha; see `config/settings.yaml`).
+
+Why: on 2024–2026 minute data, these stocks earned almost all their return
+**overnight** (SPY open→close was about −1.7%/yr), so the original intraday
+bot — flat every night, ~15× daily turnover — lost money after costs. The
+LightGBM alpha (out-of-sample AUC 0.503) and PPO allocator also failed to beat
+the baseline out of sample, and momentum, reversal, trend and volatility
+overlays all lost to plain equal weight on the 2024–25 data used to choose.
+
+Event-driven backtests (3 bps per side costs, $100k):
+
+| Period | Strategy | SPY | Sharpe | Max drawdown | Trades |
+| --- | --- | --- | --- | --- | --- |
+| 2025 (used for selection) | +12.4% | +15.7% | 0.71 | −21.8% | 67 |
+| 2026 Jan–Sep (unseen) | +12.6% | +11.9% | 1.46 | −8.8% | 56 |
+
+This is close to index investing: it makes money when large caps rise and
+loses when they fall. Past results don't guarantee future ones.
+
 ## Setup
 
 ```powershell

@@ -36,8 +36,12 @@ def make_bars(days=3, seed=0, start="2025-03-03", drift=0.0):
 
 @pytest.fixture
 def settings():
+    """Intraday configuration (flat at close), independent of settings.yaml."""
     s = load_settings()
     s["universe"] = ["SPY", "AAA", "BBB"]
+    s["strategy"].update(alphas=["momentum", "mean_reversion"],
+                         decision_interval_min=5, first_decision_min=0)
+    s["risk"].update(flatten_at_close=True, daily_loss_limit_pct=0.02, rebalance_band=0.03)
     return s
 
 

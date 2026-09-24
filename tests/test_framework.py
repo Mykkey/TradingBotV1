@@ -54,6 +54,13 @@ def test_risk_caps_and_flattens():
     assert near_close == {"A": 0.0, "B": 0.0}
 
 
+def test_risk_can_hold_overnight_and_disable_kill_switch():
+    risk = RiskLimits(daily_loss_limit_pct=None, flatten_at_close=False)
+
+    assert risk.manage_risk(NOW, {"A": 0.1}, state(minutes_to_close=1)) == {"A": 0.1}
+    assert risk.manage_risk(NOW, {"A": 0.1}, state(equity=50_000)) == {"A": 0.1}
+
+
 def test_risk_daily_loss_kill_switch():
     risk = RiskLimits(daily_loss_limit_pct=0.02)
 

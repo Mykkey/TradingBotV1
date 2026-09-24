@@ -22,8 +22,33 @@ def algorithm(settings, alphas):
         alphas=alphas,
         portfolio_model=EqualWeightPortfolio(),
         risk_model=RiskLimits(**settings["risk"]),
-        execution_model=SimExecution(settings["risk"]["min_trade_value"]),
+        execution_model=SimExecution(settings["risk"]["min_trade_value"],
+                                     settings["risk"]["rebalance_band"]),
     )
+
+
+def test_hold_strategy_holds_overnight_with_low_turnover(settings, bars, tmp_path):
+    from tradingbot.alphas.hold import HoldAlpha
+
+    settings["strategy"].update(decision_interval_min=30, first_decision_min=30)
+    settings["risk"].update(flatten_at_close=False, daily_loss_limit_pct=None,
+                            rebalance_band=0.01, max_position_pct=0.5)
+
+    metrics = Backtest(algorithm(settings, [HoldAlpha(["AAA", "BBB"])]),
+                       bars, settings, tmp_path).run()
+    trades = load_trades(tmp_path)
+    equity = load_equity(tmp_path)
+
+    # Buys at 10:00 on day one (not in the opening 30 minutes), then holds,
+    # only trimming when a position drifts more than the 1% band.
+    first = trades.iloc[:2]
+    assert set(first["side"]) == {"buy"}
+    assert first["timestamp"].min().strftime("%H:%M") == "10:01"
+    last = equity.groupby(equity["timestamp"].dt.date).tail(1)
+    assert (last["n_positions"] == 2).all()
+    rebalances = trades.iloc[2:]
+    assert (rebalances["qty"] * rebalances["price"] >= 1_000 - 1).all()
+    assert metrics["days"] == 3
 
 
 def test_no_signal_does_nothing(settings, bars, tmp_path):

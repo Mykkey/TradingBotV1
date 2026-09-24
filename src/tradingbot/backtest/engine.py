@@ -32,7 +32,11 @@ class Backtest:
         self.ledger = Ledger(starting_cash, costs["commission_per_share"])
 
         self.interval = settings["strategy"]["decision_interval_min"]
-        self.flatten_minutes = settings["risk"]["flatten_minutes_before_close"]
+        self.first_decision = settings["strategy"].get("first_decision_min", 0)
+        self.flatten_minutes = (
+            settings["risk"]["flatten_minutes_before_close"]
+            if settings["risk"].get("flatten_at_close", True) else 0
+        )
         self.snapshot_every = settings["logging"]["equity_snapshot_min"]
 
     def run(self):
@@ -87,7 +91,10 @@ class Backtest:
             if minutes_open % self.snapshot_every == 0 or minutes_to_close == 1:
                 self._snapshot(logger, now, equity, prices)
 
-            decide = minutes_open % self.interval == 0 or minutes_to_close <= self.flatten_minutes
+            decide = (
+                (minutes_open % self.interval == 0 and minutes_open >= self.first_decision)
+                or minutes_to_close <= self.flatten_minutes
+            )
 
             if not decide or minutes_to_close <= 1:
                 continue
