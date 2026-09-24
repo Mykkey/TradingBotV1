@@ -20,7 +20,7 @@ $settings = New-ScheduledTaskSettingsSet `
     -ExecutionTimeLimit (New-TimeSpan -Hours 10)
 
 # --- Live trading session ---
-$liveAction = New-ScheduledTaskAction -Execute $python -Argument "main.py live" -WorkingDirectory $repo
+$liveAction = New-ScheduledTaskAction -Execute $python -Argument "-m tradingbot live" -WorkingDirectory $repo
 $liveTriggers = @(
     (New-ScheduledTaskTrigger -Weekly -DaysOfWeek $weekdays -At "13:15"),
     # Resume after a reboot mid-session (exits immediately if the market is far from open).

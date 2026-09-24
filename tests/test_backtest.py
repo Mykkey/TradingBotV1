@@ -2,14 +2,14 @@
 import pandas as pd
 import pytest
 
-from alphas import build_alphas
-from backtest.engine import Backtest
-from core.framework import AlphaModel, Algorithm
-from execution.sim_exec import SimExecution
-from monitoring.report import build_report
-from monitoring.trade_logger import load_equity, load_trades
-from portfolio.equal_weight import EqualWeightPortfolio
-from risk.limits import RiskLimits
+from tradingbot.alphas import build_alphas
+from tradingbot.backtest.engine import Backtest
+from tradingbot.core.framework import AlphaModel, Algorithm
+from tradingbot.execution.sim_exec import SimExecution
+from tradingbot.monitoring.report import build_report
+from tradingbot.monitoring.trade_logger import load_equity, load_trades
+from tradingbot.portfolio.equal_weight import EqualWeightPortfolio
+from tradingbot.risk.limits import RiskLimits
 
 
 class NoSignal(AlphaModel):
@@ -60,7 +60,7 @@ def test_strategy_backtest_writes_logs_and_report(settings, bars, tmp_path):
 
 
 def test_daily_summary_is_idempotent(settings, bars, tmp_path):
-    from monitoring.trade_logger import TradeLogger
+    from tradingbot.monitoring.trade_logger import TradeLogger
 
     Backtest(algorithm(settings, build_alphas(settings)), bars, settings, tmp_path).run()
     logger = TradeLogger(tmp_path)

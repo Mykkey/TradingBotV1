@@ -5,15 +5,15 @@ import numpy as np
 import pytest
 from gymnasium.utils.env_checker import check_env
 
-from alphas.ml_alpha import MLAlpha
-from backtest.engine import Backtest
-from core.framework import Algorithm
-from execution.sim_exec import SimExecution
-from ml.train_alpha import build_dataset, train_alpha
-from rl.env import AllocationEnv, action_to_weights
-from rl.features import build_panel
-from rl.train import baseline_weights, evaluate, train_rl
-from risk.limits import RiskLimits
+from tradingbot.alphas.ml_alpha import MLAlpha
+from tradingbot.backtest.engine import Backtest
+from tradingbot.core.framework import Algorithm
+from tradingbot.execution.sim_exec import SimExecution
+from tradingbot.ml.train_alpha import build_dataset, train_alpha
+from tradingbot.rl.env import AllocationEnv, action_to_weights
+from tradingbot.rl.features import build_panel
+from tradingbot.rl.train import baseline_weights, evaluate, train_rl
+from tradingbot.risk.limits import RiskLimits
 from tests.conftest import make_bars
 
 
@@ -71,7 +71,7 @@ def test_rl_train_and_allocator_backtest(settings, long_bars, tmp_path):
     assert json.loads((tmp_path / "ppo.json").read_text())["symbols"] == ["SPY", "AAA", "BBB"]
     assert "rl_heldout" in meta and "baseline_heldout" in meta
 
-    from portfolio.rl_allocator import RLAllocator
+    from tradingbot.portfolio.rl_allocator import RLAllocator
 
     algorithm = Algorithm(
         alphas=[],

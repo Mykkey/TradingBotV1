@@ -3,12 +3,12 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from alphas.mean_reversion import VwapMeanReversionAlpha
-from alphas.momentum import MomentumAlpha
-from core.insight import Direction, Insight
-from execution.base import orders_for_targets
-from portfolio.equal_weight import EqualWeightPortfolio
-from risk.limits import RiskLimits
+from tradingbot.alphas.mean_reversion import VwapMeanReversionAlpha
+from tradingbot.alphas.momentum import MomentumAlpha
+from tradingbot.core.insight import Direction, Insight
+from tradingbot.execution.base import orders_for_targets
+from tradingbot.portfolio.equal_weight import EqualWeightPortfolio
+from tradingbot.risk.limits import RiskLimits
 from tests.conftest import make_bars
 
 

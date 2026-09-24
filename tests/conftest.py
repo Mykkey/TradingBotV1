@@ -1,14 +1,10 @@
 # conftest.py
-import sys
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-from config import load_settings  # noqa: E402
+from tradingbot.config import load_settings
 
 
 def make_bars(days=3, seed=0, start="2025-03-03", drift=0.0):
